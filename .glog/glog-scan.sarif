@@ -1,0 +1,993 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Glog.AI",
+          "organization": "Glog.AI",
+          "fullName": "Glog, Making software more secure",
+          "version": "1.0.0",
+          "semanticVersion": "1.0.0",
+          "informationUri": "https://www.glog.ai",
+          "rules": [
+            {
+              "id": "735c6519-6b6e-3140-abde-38aa796cb138",
+              "name": "Problematic C function detected (memcpy)",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "This finding is considered a genuine vulnerability because the classification indicates a likely vulnerability due to a missing check that the length parameter is greater than zero. The code copies memory using a length value (cbIndices) without verifying that it is positive, which could result in an underflow and a very large size being passed to the memory copy operation. There are no explicit checks or guards in place to prevent this, and neither the source nor the destination is likely to be null or overlapping, so the main risk is the unchecked length. This makes the issue actionable and not a false positive.\n\n## In Context Remediation\nBefore performing the memory copy, ensure that the length parameter is validated to be greater than zero and does not exceed the capacity of the destination buffer. This prevents underflow and potential buffer overflows.\n\n```cpp\nif (cbIndices > 0 && cbIndices <= MAX_GLYPH_INDICES) {\n    memcpy(m_pGlyphIndices, pIndices, cbIndices);\n}\n```\nReplace `MAX_GLYPH_INDICES` with the actual size or capacity of `m_pGlyphIndices` if known. This check ensures that only valid, non-zero, and non-excessive lengths are used for the memory copy operation.\n\n___\n"
+              },
+              "properties": {
+                "cwe": [],
+                "severity": "LOW",
+                "kind": "FAIL"
+              }
+            },
+            {
+              "id": "3c2eb3d2-48aa-32ad-927a-3d7aaa656449",
+              "name": "Problematic C function detected (memcpy)",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "This finding is considered a genuine vulnerability because the classification indicates a likely risk due to a missing check on the length parameter before performing the memory copy operation. The code copies memory from one location to another using a length value that is not explicitly checked for being greater than zero. If the length is zero or negative (after unsigned conversion), this could result in a very large size being passed to the memory copy function, potentially causing a buffer overflow or other memory corruption. The source and destination are not null and do not overlap, which reduces some risk, but the absence of a guard for the length parameter is a significant issue. The probability of this being a false positive is low because the main risk is the unchecked length, which is a common and well-known vulnerability pattern.\n\n## In Context Remediation\nBefore performing the memory copy, ensure that the length parameter (`cbOffsets`) is checked to be greater than zero and does not exceed the capacity of the destination buffer. This prevents underflow and potential buffer overflow vulnerabilities.\n\n```cpp\nif (cbOffsets > 0 && cbOffsets <= sizeof(m_pGlyphOffsets)) {\n    memcpy(m_pGlyphOffsets, pOffsets, cbOffsets);\n}\n```\n\nIf the size of the destination buffer is not known at this point, ensure that `cbOffsets` is validated against the actual allocated size of `m_pGlyphOffsets` to prevent overflows.\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [NIST Glossary: Buffer Overflow](https://csrc.nist.gov/glossary/term/buffer_overflow)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n- [CWE-131: Incorrect Calculation of Buffer Size](https://cwe.mitre.org/data/definitions/131.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n\n___\n"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-119",
+                    "url": "https://cwe.mitre.org/data/definitions/119.html"
+                  },
+                  {
+                    "id": "CWE-120",
+                    "url": "https://cwe.mitre.org/data/definitions/120.html"
+                  },
+                  {
+                    "id": "CWE-131",
+                    "url": "https://cwe.mitre.org/data/definitions/131.html"
+                  }
+                ],
+                "severity": "LOW",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-119",
+                  "CWE-120",
+                  "CWE-131"
+                ]
+              }
+            },
+            {
+              "id": "8be8ee69-2ff8-3c50-af1e-b07b311cb850",
+              "name": "Problematic C function detected (memcpy)",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "This finding is considered a genuine vulnerability because the classification indicates a likely risk due to a missing check for a positive length before performing the memory copy operation. The code copies memory using a length value that is not explicitly guarded against being zero or negative (which could underflow to a very large value when cast to size_t). The source and destination are both non-pointer expressions, reducing the risk of null pointer dereference, and there is no risk of overlapping memory regions. However, the absence of a guard for the length parameter is a significant issue, as it could lead to a buffer overflow or excessive memory copy if the length is not properly validated. The probability of this being a false positive is low, as the main risk is the unchecked length parameter.\n\n## In Context Remediation 1\nAdd an explicit check to ensure the length parameter used in the memory copy is greater than zero before calling the function. This prevents underflow and ensures that no memory is copied if the length is zero or negative.\n\n```cpp\nif (cbAdvances > 0) {\n    memcpy(m_pGlyphAdvances, pAdvances, cbAdvances);\n}\n```\n\nThis check ensures that the memory copy only occurs when the length is valid, preventing potential buffer overflows or excessive memory operations.\n\n## In Context Remediation 2\nIf the length parameter can be negative (for example, if it is an integer type), cast it to an unsigned type only after validating it is positive. This avoids underflow to a large size_t value.\n\n```cpp\nif (cbAdvances > 0) {\n    memcpy(m_pGlyphAdvances, pAdvances, static_cast<size_t>(cbAdvances));\n}\n```\n\nThis approach ensures that only valid, positive lengths are used for the memory copy operation.\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [NIST Glossary: Buffer Overflow](https://csrc.nist.gov/glossary/term/buffer_overflow)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n\n___\n"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-119",
+                    "url": "https://cwe.mitre.org/data/definitions/119.html"
+                  },
+                  {
+                    "id": "CWE-120",
+                    "url": "https://cwe.mitre.org/data/definitions/120.html"
+                  }
+                ],
+                "severity": "LOW",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-119",
+                  "CWE-120"
+                ]
+              }
+            },
+            {
+              "id": "0c888925-b18c-369a-a35b-d735245c49a3",
+              "name": "Problematic C function detected (memcpy)",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "This finding is considered a genuine vulnerability because the classification indicates a risk of undefined behavior due to the possibility that either the source or destination pointer may be null when the memory copy operation is performed. There are no explicit checks in the code to ensure that the pointers are valid before calling the memory copy function. The risk is further supported by the analysis, which notes that both the source and destination pointers could be null, and there are no guards in place to prevent this. The memory copy operation uses a fixed size based on the type, but this does not mitigate the risk of dereferencing a null pointer. The absence of pointer validation is a critical issue that can lead to crashes or exploitable vulnerabilities.\n\n## In Context Remediation\nBefore performing the memory copy operation, ensure that both the source and destination pointers are not null. Add explicit checks to validate the pointers and handle the error appropriately if either is null.\n\n```cpp\nif (pGeometryStructs != nullptr && pBezSeg != nullptr) {\n    memcpy(pGeometryStructs, static_cast<void*>(pBezSeg), sizeof(MilSegmentBezier));\n} else {\n    // Handle error: one or both pointers are null\n    // For example, log an error or return an error code\n}\n```\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-476: NULL Pointer Dereference](https://cwe.mitre.org/data/definitions/476.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n\n\n___\n"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-476",
+                    "url": "https://cwe.mitre.org/data/definitions/476.html"
+                  },
+                  {
+                    "id": "CWE-119",
+                    "url": "https://cwe.mitre.org/data/definitions/119.html"
+                  }
+                ],
+                "severity": "LOW",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-476",
+                  "CWE-119"
+                ]
+              }
+            },
+            {
+              "id": "d5abda6b-5598-355a-ae48-9a4cb60de3b8",
+              "name": "Problematic C function detected (memcpy)",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "This finding is considered a genuine vulnerability because the classification indicates a risk of undefined behavior due to the possibility that either the source or destination pointer may be null when the memory copy operation is performed. There are no explicit checks in the code to ensure that these pointers are valid before the operation. The risk is further supported by the analysis, which notes that both the source and destination pointers could be null, and there are no guards in place to prevent this. The memory regions do not overlap, so overlap is not a concern here, but the lack of null pointer validation is a critical issue that can lead to crashes or other unpredictable behavior.\n\n## In Context Remediation\nBefore performing the memory copy operation, add explicit checks to ensure that both the source and destination pointers are not null. This prevents undefined behavior due to null pointer dereference.\n\n```cpp\nif (pGeometryStructs != nullptr && pLineSeg != nullptr) {\n    memcpy(pGeometryStructs, static_cast<void*>(pLineSeg), sizeof(MilSegmentLine));\n} else {\n    // Handle error: one or both pointers are null\n    // For example, log an error or return an error code\n}\n```\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-476: NULL Pointer Dereference](https://cwe.mitre.org/data/definitions/476.html)\n- [CWE-787: Out-of-bounds Write](https://cwe.mitre.org/data/definitions/787.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n\n\n___\n"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-476",
+                    "url": "https://cwe.mitre.org/data/definitions/476.html"
+                  },
+                  {
+                    "id": "CWE-787",
+                    "url": "https://cwe.mitre.org/data/definitions/787.html"
+                  }
+                ],
+                "severity": "LOW",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-476",
+                  "CWE-787"
+                ]
+              }
+            },
+            {
+              "id": "f534f6d6-6c41-370c-a843-7d935214f187",
+              "name": "Problematic C function detected (memcpy)",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "This finding is considered a genuine vulnerability because the classification indicates a risk of undefined behavior due to the possibility of a null pointer being passed as the destination to the memory copy operation. The analysis did not detect any explicit checks to ensure that the destination pointer is not null before the memory copy occurs. The source is a casted object or array, which is less likely to be null, but the destination pointer may be null, as there are no guards or checks in place. The use of a fixed size for the copy does not mitigate the risk of dereferencing a null pointer. This could lead to a crash or other unpredictable behavior at runtime if the destination pointer is ever null.\n\n## In Context Remediation\nBefore performing the memory copy, ensure that the destination pointer is not null. Add an explicit check to prevent undefined behavior if the pointer is null. For example:\n\n```cpp\nif (pGeometryStructs != nullptr) {\n    memcpy(pGeometryStructs, static_cast<void*>(m_pGeometry), sizeof(MilPathGeometry));\n} else {\n    // Handle error: destination pointer is null\n    // For example, log an error or return an error code\n}\n```\n\nThis prevents the function from attempting to copy memory to a null destination, which would otherwise result in a crash or undefined behavior.\n\n___\n"
+              },
+              "properties": {
+                "cwe": [],
+                "severity": "LOW",
+                "kind": "FAIL"
+              }
+            },
+            {
+              "id": "c8f48b1d-9872-3a52-aa32-9f480b6e72f3",
+              "name": "Problematic C function detected (memcpy)",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "This finding is classified as a genuine vulnerability because the code performs a memory copy operation without checking whether the source or destination pointers are null. If either pointer is null, this will result in undefined behavior, which can lead to crashes or security vulnerabilities. The risk is confirmed by the absence of explicit null checks for both the source and destination pointers. The classification specifically highlights the undefined behavior risk due to possible null pointers, and the verdict is marked as genuine. No evidence in the context suggests that this is a false positive, as there are no guards or capacity checks present.\n\n## In Context Remediation\nBefore performing the memory copy, add explicit checks to ensure that both the source and destination pointers are not null. This prevents undefined behavior if either pointer is invalid.\n\n```cpp\nif (pGeometryStructs != nullptr && pFigure != nullptr) {\n    memcpy(pGeometryStructs, static_cast<void*>(pFigure), sizeof(MilPathFigure));\n} else {\n    // Handle error: one or both pointers are null\n    // For example, log an error or return an error code\n}\n```\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-476: NULL Pointer Dereference](https://cwe.mitre.org/data/definitions/476.html)\n- [CWE-787: Out-of-bounds Write](https://cwe.mitre.org/data/definitions/787.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n\n\n___\n"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-476",
+                    "url": "https://cwe.mitre.org/data/definitions/476.html"
+                  },
+                  {
+                    "id": "CWE-787",
+                    "url": "https://cwe.mitre.org/data/definitions/787.html"
+                  }
+                ],
+                "severity": "LOW",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-476",
+                  "CWE-787"
+                ]
+              }
+            },
+            {
+              "id": "2aa33fda-8f9b-3d0b-a70d-47046a4f7ef1",
+              "name": "Problematic C function detected (memcpy)",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "This finding is classified as a genuine vulnerability because the code performs a memory copy operation without any explicit checks to ensure that the source and destination pointers are not null. If either pointer is null, this will result in undefined behavior, which can lead to crashes or potential security issues. The analysis indicates that both the source and destination pointers may be null at this point in the code, and there are no guards or checks in place to prevent this. The risk is not mitigated by any other factors such as overlap or bounds checks, and the verdict confirms this is a genuine issue.\n\n## In Context Remediation 1\nBefore performing the memory copy, add explicit checks to ensure that both the source and destination pointers are not null. This prevents undefined behavior if either pointer is invalid.\n\n```cpp\nif (m_pCode != nullptr && pCode != nullptr) {\n    memcpy(m_pCode, pCode, ByteCodeSize);\n} else {\n    // Handle error: one or both pointers are null\n    // For example, log an error or return an error code\n}\n```\n\nThis ensures that the memory copy only occurs when both pointers are valid, preventing crashes or security issues due to null pointer dereference.\n\n## In Context Remediation 2\nIf you want to provide more robust error handling, you can add logging or return an error code when a null pointer is detected. This makes the failure mode explicit and easier to debug.\n\n```cpp\nif (m_pCode == nullptr) {\n    // Log or handle null destination pointer\n    return ERROR_NULL_DESTINATION;\n}\nif (pCode == nullptr) {\n    // Log or handle null source pointer\n    return ERROR_NULL_SOURCE;\n}\nmemcpy(m_pCode, pCode, ByteCodeSize);\n```\n\nThis approach separates the checks and allows for more granular error handling.\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-476: NULL Pointer Dereference](https://cwe.mitre.org/data/definitions/476.html)\n- [CWE-787: Out-of-bounds Write](https://cwe.mitre.org/data/definitions/787.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n\n___\n"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-476",
+                    "url": "https://cwe.mitre.org/data/definitions/476.html"
+                  },
+                  {
+                    "id": "CWE-787",
+                    "url": "https://cwe.mitre.org/data/definitions/787.html"
+                  }
+                ],
+                "severity": "LOW",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-476",
+                  "CWE-787"
+                ]
+              }
+            },
+            {
+              "id": "aa627d85-ecd8-358b-9ead-9864dab4c583",
+              "name": "Problematic C function detected (memcpy)",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "This finding is classified as a genuine vulnerability because the analysis detected a possible overlap between the source and destination memory regions in the memory copy operation. Specifically, there is evidence that the source and destination may refer to the same memory buffer due to an alias assignment. Using memcpy in such cases can result in undefined behavior, as memcpy does not support overlapping memory regions. The risk is further confirmed by the explicit classification and verdict, and there are no mitigating factors such as explicit guards or null checks. Therefore, this issue should be addressed to prevent potential data corruption or unpredictable program behavior.\n\n## In Context Remediation 1\nTo prevent undefined behavior when the source and destination memory regions may overlap, add a runtime check to ensure they do not overlap before calling memcpy. If overlap is possible, use memmove instead, which is safe for overlapping regions.\n\n```cpp\nif ((pbNewBuffer + m_cInstructionDataSize <= m_pInstructionData) ||\n    (m_pInstructionData + m_cInstructionDataSize <= pbNewBuffer)) {\n    // No overlap, safe to use memcpy\n    memcpy(pbNewBuffer, m_pInstructionData, m_cInstructionDataSize);\n} else {\n    // Overlap detected, use memmove\n    memmove(pbNewBuffer, m_pInstructionData, m_cInstructionDataSize);\n}\n```\n\n\n## In Context Remediation 2\nAlternatively, replace the memcpy call with memmove, which is designed to handle overlapping memory regions safely. This change ensures correct behavior regardless of whether the source and destination overlap.\n\n```cpp\nmemmove(pbNewBuffer, m_pInstructionData, m_cInstructionDataSize);\n```\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n- [CWE-787: Out-of-bounds Write](https://cwe.mitre.org/data/definitions/787.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n\n\n___\n"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-119",
+                    "url": "https://cwe.mitre.org/data/definitions/119.html"
+                  },
+                  {
+                    "id": "CWE-120",
+                    "url": "https://cwe.mitre.org/data/definitions/120.html"
+                  },
+                  {
+                    "id": "CWE-787",
+                    "url": "https://cwe.mitre.org/data/definitions/787.html"
+                  }
+                ],
+                "severity": "LOW",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-119",
+                  "CWE-120",
+                  "CWE-787"
+                ]
+              }
+            },
+            {
+              "id": "f09726b3-af0d-3f6d-940e-4f7976a51741",
+              "name": "Problematic C function detected (memcpy)",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "This finding is considered a genuine vulnerability because the classification indicates a likely risk due to a missing check on the length parameter before performing the memory copy operation. The code copies data using a length value (ulTableSize) without verifying that it is greater than zero, which could lead to an underflow and result in a very large size being passed to the memory copy function. There is no evidence of overlapping memory regions, and both the source and destination are confirmed to be non-null, which reduces the risk of undefined behavior from those sources. However, the absence of a guard to ensure the length is positive is a significant issue. The probability of this being a false positive is low because the analysis did not detect any mitigating factors such as bounds checks, capacity-based length assignment, or safe count expressions.\n\n## In Context Remediation\nBefore performing the memory copy, ensure that the length parameter (ulTableSize) is validated to be greater than zero and does not exceed the capacity of the destination buffer. This prevents underflow and potential buffer overflow vulnerabilities.\n\n```cpp\nif (ulTableSize > 0 && ulTableSize <= MAX_INDEX_SUB_TABLE_SIZE) {\n    memcpy(*ppuchIndexSubTable + ulLocalCurrentOffset, &IndexSubTable2, ulTableSize);\n}\n```\nReplace `MAX_INDEX_SUB_TABLE_SIZE` with the actual size of the destination buffer to ensure the copy does not exceed its bounds.\n\n___\n"
+              },
+              "properties": {
+                "cwe": [],
+                "severity": "LOW",
+                "kind": "FAIL"
+              }
+            }
+          ],
+          "language": "en-US",
+          "contents": [
+            "localizedData",
+            "nonLocalizedData"
+          ],
+          "isComprehensive": false
+        }
+      },
+      "language": "en-US",
+      "results": [
+        {
+          "ruleId": "735c6519-6b6e-3140-abde-38aa796cb138",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/glyph/glyphruncore.cpp"
+                },
+                "region": {
+                  "startLine": 129,
+                  "startColumn": 12,
+                  "endLine": 129,
+                  "endColumn": 56,
+                  "charOffset": 4258,
+                  "charLength": 44,
+                  "snippet": {
+                    "text": "memcpy(m_pGlyphIndices, pIndices, cbIndices)",
+                    "rendered": {
+                      "text": "memcpy(m_pGlyphIndices, pIndices, cbIndices)",
+                      "markdown": "`memcpy(m_pGlyphIndices, pIndices, cbIndices)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "e0e5baa75e15f8368653d106460332058fc0cf814e658188152aa2673147d33b",
+            "glog-pfp-ruleFileCode/v1": "bd2219543b82717056fbacb6d19e414b9ca3a6a6b20494076faa01dc10d6aa86"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "bd2219543b82717056fbacb6d19e414b9ca3a6a6b20494076faa01dc10d6aa86"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/glyph/glyphruncore.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 4258,
+                        "charLength": 44
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(m_pGlyphIndices, <size of m_pGlyphIndices>,  pIndices,  cbIndices)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "3c2eb3d2-48aa-32ad-927a-3d7aaa656449",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/glyph/glyphruncore.cpp"
+                },
+                "region": {
+                  "startLine": 137,
+                  "startColumn": 16,
+                  "endLine": 137,
+                  "endColumn": 60,
+                  "charOffset": 4637,
+                  "charLength": 44,
+                  "snippet": {
+                    "text": "memcpy(m_pGlyphOffsets, pOffsets, cbOffsets)",
+                    "rendered": {
+                      "text": "memcpy(m_pGlyphOffsets, pOffsets, cbOffsets)",
+                      "markdown": "`memcpy(m_pGlyphOffsets, pOffsets, cbOffsets)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "9e60b73baf4775d726cb3555990ede3d001ff5813ec152057f20d0c4d2b90d0b",
+            "glog-pfp-ruleFileCode/v1": "5f8d8fdb3c01608c8ea4e035c7c144342fd7bf4b02e6599233a3fda5353a97bf"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "5f8d8fdb3c01608c8ea4e035c7c144342fd7bf4b02e6599233a3fda5353a97bf"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/glyph/glyphruncore.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 4637,
+                        "charLength": 44
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(m_pGlyphOffsets, <size of m_pGlyphOffsets>,  pOffsets,  cbOffsets)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "8be8ee69-2ff8-3c50-af1e-b07b311cb850",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/glyph/glyphruncore.cpp"
+                },
+                "region": {
+                  "startLine": 132,
+                  "startColumn": 12,
+                  "endLine": 132,
+                  "endColumn": 59,
+                  "charOffset": 4411,
+                  "charLength": 47,
+                  "snippet": {
+                    "text": "memcpy(m_pGlyphAdvances, pAdvances, cbAdvances)",
+                    "rendered": {
+                      "text": "memcpy(m_pGlyphAdvances, pAdvances, cbAdvances)",
+                      "markdown": "`memcpy(m_pGlyphAdvances, pAdvances, cbAdvances)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "1d1072991dd714a6a01ff45a3f6748c367e93b6fa1094cadeaaa5f72c2c812ae",
+            "glog-pfp-ruleFileCode/v1": "eb0affcb2ebf9e50766d3031eb4fa166fc8e003b6ef03f1ee4dcaeba2d51811c"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "eb0affcb2ebf9e50766d3031eb4fa166fc8e003b6ef03f1ee4dcaeba2d51811c"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/glyph/glyphruncore.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 4411,
+                        "charLength": 47
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(m_pGlyphAdvances, <size of m_pGlyphAdvances>,  pAdvances,  cbAdvances)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "0c888925-b18c-369a-a35b-d735245c49a3",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/GlyphRunGeometrySink.cpp"
+                },
+                "region": {
+                  "startLine": 807,
+                  "startColumn": 24,
+                  "endLine": 807,
+                  "endColumn": 102,
+                  "charOffset": 23788,
+                  "charLength": 78,
+                  "snippet": {
+                    "text": "memcpy(pGeometryStructs, static_cast<void*>(pBezSeg), sizeof(MilSegmentBezier)",
+                    "rendered": {
+                      "text": "memcpy(pGeometryStructs, static_cast<void*>(pBezSeg), sizeof(MilSegmentBezier)",
+                      "markdown": "`memcpy(pGeometryStructs, static_cast<void*>(pBezSeg), sizeof(MilSegmentBezier)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "ee7f19244420913067db16d76e019dbc526ca04e0ad37995629eac8b89d9c3a9",
+            "glog-pfp-ruleFileCode/v1": "d14185c7240d84c5e0e8db938ebe492df31200e38f45b1b08dc2b53e495349bf"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "d14185c7240d84c5e0e8db938ebe492df31200e38f45b1b08dc2b53e495349bf"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/GlyphRunGeometrySink.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 23788,
+                        "charLength": 78
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(pGeometryStructs, <size of pGeometryStructs>,  static_cast<void*>(pBezSeg),  sizeof(MilSegmentBezier)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "d5abda6b-5598-355a-ae48-9a4cb60de3b8",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/GlyphRunGeometrySink.cpp"
+                },
+                "region": {
+                  "startLine": 798,
+                  "startColumn": 24,
+                  "endLine": 798,
+                  "endColumn": 101,
+                  "charOffset": 23301,
+                  "charLength": 77,
+                  "snippet": {
+                    "text": "memcpy(pGeometryStructs, static_cast<void*>(pLineSeg), sizeof(MilSegmentLine)",
+                    "rendered": {
+                      "text": "memcpy(pGeometryStructs, static_cast<void*>(pLineSeg), sizeof(MilSegmentLine)",
+                      "markdown": "`memcpy(pGeometryStructs, static_cast<void*>(pLineSeg), sizeof(MilSegmentLine)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "c0554f9d2142d3f727522253d8e9dbf1877a5b64314625103ce14012a05b9a0c",
+            "glog-pfp-ruleFileCode/v1": "7ffe11f65aa272b2a5cbebfb3212961c6360d7e17cdc348fcd8c148c50bbf982"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "7ffe11f65aa272b2a5cbebfb3212961c6360d7e17cdc348fcd8c148c50bbf982"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/GlyphRunGeometrySink.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 23301,
+                        "charLength": 77
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(pGeometryStructs, <size of pGeometryStructs>,  static_cast<void*>(pLineSeg),  sizeof(MilSegmentLine)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "f534f6d6-6c41-370c-a843-7d935214f187",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/GlyphRunGeometrySink.cpp"
+                },
+                "region": {
+                  "startLine": 774,
+                  "startColumn": 8,
+                  "endLine": 774,
+                  "endColumn": 89,
+                  "charOffset": 22215,
+                  "charLength": 81,
+                  "snippet": {
+                    "text": "memcpy(pGeometryStructs, static_cast<void*>(m_pGeometry), sizeof(MilPathGeometry)",
+                    "rendered": {
+                      "text": "memcpy(pGeometryStructs, static_cast<void*>(m_pGeometry), sizeof(MilPathGeometry)",
+                      "markdown": "`memcpy(pGeometryStructs, static_cast<void*>(m_pGeometry), sizeof(MilPathGeometry)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "7ce88601f989443cab6ecf20eba74fbe3e40a47cf98ec821db2f6d1a1bf247d1",
+            "glog-pfp-ruleFileCode/v1": "213f01a47fb65cadbb2b82962d5cc3409005065bfa1b29d40508460bde7e55d8"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "213f01a47fb65cadbb2b82962d5cc3409005065bfa1b29d40508460bde7e55d8"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/GlyphRunGeometrySink.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 22215,
+                        "charLength": 81
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(pGeometryStructs, <size of pGeometryStructs>,  static_cast<void*>(m_pGeometry),  sizeof(MilPathGeometry)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "c8f48b1d-9872-3a52-aa32-9f480b6e72f3",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/GlyphRunGeometrySink.cpp"
+                },
+                "region": {
+                  "startLine": 783,
+                  "startColumn": 12,
+                  "endLine": 783,
+                  "endColumn": 87,
+                  "charOffset": 22631,
+                  "charLength": 75,
+                  "snippet": {
+                    "text": "memcpy(pGeometryStructs, static_cast<void*>(pFigure), sizeof(MilPathFigure)",
+                    "rendered": {
+                      "text": "memcpy(pGeometryStructs, static_cast<void*>(pFigure), sizeof(MilPathFigure)",
+                      "markdown": "`memcpy(pGeometryStructs, static_cast<void*>(pFigure), sizeof(MilPathFigure)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "5e6d89ed0c37de61f170cac8f4ab21a099ff520634e89cb6e88ed87c57dbaa65",
+            "glog-pfp-ruleFileCode/v1": "4aa855b2a1569a64ba03de9724c676ec896306b081a6f09fa48d72abcbd81714"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "4aa855b2a1569a64ba03de9724c676ec896306b081a6f09fa48d72abcbd81714"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/GlyphRunGeometrySink.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 22631,
+                        "charLength": 75
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(pGeometryStructs, <size of pGeometryStructs>,  static_cast<void*>(pFigure),  sizeof(MilPathFigure)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "2aa33fda-8f9b-3d0b-a70d-47046a4f7ef1",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/PixelShader/pstrans.cpp"
+                },
+                "region": {
+                  "startLine": 474,
+                  "startColumn": 8,
+                  "endLine": 474,
+                  "endColumn": 46,
+                  "charOffset": 22828,
+                  "charLength": 38,
+                  "snippet": {
+                    "text": "memcpy( m_pCode, pCode, ByteCodeSize )",
+                    "rendered": {
+                      "text": "memcpy( m_pCode, pCode, ByteCodeSize )",
+                      "markdown": "`memcpy( m_pCode, pCode, ByteCodeSize )`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "819a50e8e4ea9d346a9eb399a0d106547788fabcde86da2cee9f01ae0d56eac5",
+            "glog-pfp-ruleFileCode/v1": "246e6d88a851ebf5d1ed36878a48b2983695822c7620402cdf72bb7682916386"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "246e6d88a851ebf5d1ed36878a48b2983695822c7620402cdf72bb7682916386"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/PixelShader/pstrans.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 22828,
+                        "charLength": 38
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s( m_pCode, <size of  m_pCode>,  pCode,  ByteCodeSize )"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "aa627d85-ecd8-358b-9ead-9864dab4c583",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/PixelShader/rdpstrans.cpp"
+                },
+                "region": {
+                  "startLine": 84,
+                  "startColumn": 12,
+                  "endLine": 84,
+                  "endColumn": 75,
+                  "charOffset": 2090,
+                  "charLength": 63,
+                  "snippet": {
+                    "text": "memcpy(pbNewBuffer, m_pInstructionData, m_cInstructionDataSize)",
+                    "rendered": {
+                      "text": "memcpy(pbNewBuffer, m_pInstructionData, m_cInstructionDataSize)",
+                      "markdown": "`memcpy(pbNewBuffer, m_pInstructionData, m_cInstructionDataSize)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "adbe9a85869ba534ab249233404504e5d2f68b2295f9c08a531894f137e019f2",
+            "glog-pfp-ruleFileCode/v1": "539296d36ca121f1bd0eb354873dffa0b2a7f5abd798a3fa946e63d3384395c4"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "539296d36ca121f1bd0eb354873dffa0b2a7f5abd798a3fa946e63d3384395c4"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/PixelShader/rdpstrans.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 2090,
+                        "charLength": 63
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(pbNewBuffer, <size of pbNewBuffer>,  m_pInstructionData,  m_cInstructionDataSize)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "f09726b3-af0d-3f6d-940e-4f7976a51741",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/modsbit.cpp"
+                },
+                "region": {
+                  "startLine": 358,
+                  "startColumn": 20,
+                  "endLine": 358,
+                  "endColumn": 100,
+                  "charOffset": 20263,
+                  "charLength": 80,
+                  "snippet": {
+                    "text": "memcpy(*ppuchIndexSubTable + ulLocalCurrentOffset, &IndexSubTable2, ulTableSize)",
+                    "rendered": {
+                      "text": "memcpy(*ppuchIndexSubTable + ulLocalCurrentOffset, &IndexSubTable2, ulTableSize)",
+                      "markdown": "`memcpy(*ppuchIndexSubTable + ulLocalCurrentOffset, &IndexSubTable2, ulTableSize)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "9a0cb0a7f9a32763736d1395c3be2b8c961a4528820341e6128c12ae8a1f7a7a",
+            "glog-pfp-ruleFileCode/v1": "3cab96419ccc2124d98106eef16d85c6d542a4cbf25fe4d28b1f6a0f0d90bc20"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "3cab96419ccc2124d98106eef16d85c6d542a4cbf25fe4d28b1f6a0f0d90bc20"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/modsbit.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 20263,
+                        "charLength": 80
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(*ppuchIndexSubTable + ulLocalCurrentOffset, <size of *ppuchIndexSubTable + ulLocalCurrentOffset>,  &IndexSubTable2,  ulTableSize)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        }
+      ],
+      "newlineSequences": [
+        "\r\n",
+        "\n"
+      ]
+    }
+  ]
+}
